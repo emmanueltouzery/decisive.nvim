@@ -7,6 +7,32 @@ local function align_csv_clear()
 
 end
 
+-- messy due to supporting " fields containing the separator
+-- presumably not the most performant, if it's even correct
+local function split_line(line, sep)
+  local list = vim.split(line, sep)
+  -- now we merge back some cols that were quoted
+  local cols = {}
+  local col = nil
+  for _, item in ipairs(list) do
+    if col ~= nil then
+      col = col .. "," .. item
+      if item:match([["$]]) then
+        table.insert(cols, col)
+        col = nil
+      end
+    elseif item:match([[^"]]) then
+      col = item
+    else
+      table.insert(cols, item)
+    end
+  end
+  if col ~= nil then
+    table.insert(cols, col)
+  end
+  return cols
+end
+
 local function align_csv(opts)
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   if #lines == 0 then
@@ -30,15 +56,15 @@ local function align_csv(opts)
   local ns = vim.api.nvim_create_namespace('__align_csv')
   local col_lengths = {}
   for _, line in ipairs(lines) do
-    local cols = vim.split(line, vim.b.__align_csv_separator)
+    local cols = split_line(line, vim.b.__align_csv_separator)
     for col_idx, col in ipairs(cols) do
-      if not col_lengths[col_idx] or vim.fn.strdisplaywidth(col) > col_lengths[col_idx] then
-        col_lengths[col_idx] = vim.fn.strdisplaywidth(col)
+      if not col_lengths[col_idx] or vim.fn.strdisplaywidth(col)+1 > col_lengths[col_idx] then
+        col_lengths[col_idx] = vim.fn.strdisplaywidth(col)+1
       end
     end
   end
   for line_idx, line in ipairs(lines) do
-    local cols = vim.split(line, vim.b.__align_csv_separator)
+    local cols = split_line(line, vim.b.__align_csv_separator)
     local col_from_start = 0
     for col_idx, col in ipairs(cols) do
       if vim.fn.strdisplaywidth(col) < col_lengths[col_idx] then
@@ -93,6 +119,7 @@ end
 
 return {
   align_csv = align_csv,
+  align_csv_clear = align_csv_clear,
   align_csv_next_col = align_csv_next_col,
   align_csv_prev_col = align_csv_prev_col,
 }
