@@ -120,9 +120,27 @@ local function align_csv_prev_col()
   end
 end
 
+local function inner_cell_to()
+  local ns = vim.api.nvim_create_namespace('__align_csv')
+  local prev_mark = vim.api.nvim_buf_get_extmarks(0, ns, {vim.fn.line('.')-1, vim.fn.col('.')-1}, 0, {limit = 1})
+  local next_mark = vim.api.nvim_buf_get_extmarks(0, ns, {vim.fn.line('.')-1, vim.fn.col('.')+1}, -1, {limit = 1})
+  vim.fn.setpos('.', {0, prev_mark[1][2]+1, prev_mark[1][3]+1, 0})
+  vim.cmd("norm! v" .. (next_mark[1][3] - prev_mark[1][3] - 2) .. "lo")
+end
+
+local function setup(opts)
+  if opts.enable_text_objects ~= false then
+    local cell_key = opts.cell_text_object_leader or 'c'
+    vim.cmd([[onoremap <silent> i]] .. cell_key .. [[ :<c-u>lua require('decisive').inner_cell_to()<cr>]])
+    vim.cmd([[xnoremap <silent> i]] .. cell_key .. [[ :<c-u>lua require('decisive').inner_cell_to()<cr>]])
+  end
+end
+
 return {
   align_csv = align_csv,
   align_csv_clear = align_csv_clear,
   align_csv_next_col = align_csv_next_col,
   align_csv_prev_col = align_csv_prev_col,
+  inner_cell_to = inner_cell_to,
+  setup = setup,
 }
