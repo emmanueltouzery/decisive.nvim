@@ -67,19 +67,22 @@ local function align_csv(opts)
     local cols = split_line(line, vim.b.__align_csv_separator)
     local col_from_start = 0
     for col_idx, col in ipairs(cols) do
-      if vim.fn.strdisplaywidth(col) < col_lengths[col_idx] then
-        vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, col_from_start + vim.fn.strdisplaywidth(col), {
-          virt_text = {{string.rep(" ", col_lengths[col_idx] - vim.fn.strdisplaywidth(col)), "CsvFillHl"}},
-          virt_text_pos = "inline",
-        })
-      else
-        -- no need for virtual text, the column is full. but add it anyway because of the previous/next column jumps
-        vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, col_from_start + vim.fn.strdisplaywidth(col), {
-          virt_text = {{"", "CsvFillHl"}},
-          virt_text_pos = "inline",
-        })
+      if col_idx < #cols then
+        local extmark_col = col_from_start + #col+1
+        if vim.fn.strdisplaywidth(col) < col_lengths[col_idx] then
+          vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
+            virt_text = {{string.rep(" ", col_lengths[col_idx] - vim.fn.strdisplaywidth(col)), "CsvFillHl"}},
+            virt_text_pos = "inline",
+          })
+        else
+          -- no need for virtual text, the column is full. but add it anyway because of the previous/next column jumps
+          vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
+            virt_text = {{"", "CsvFillHl"}},
+            virt_text_pos = "inline",
+          })
+        end
+        col_from_start = extmark_col
       end
-      col_from_start = col_from_start + vim.fn.strdisplaywidth(col) + 1 -- +1 due to ;
     end
   end
 end
