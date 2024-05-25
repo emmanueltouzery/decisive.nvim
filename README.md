@@ -24,7 +24,10 @@ vim.keymap.set('n', ']c', ":lua require('decisive').align_csv_next_col()<cr>", {
 require('decisive').setup{}
 ```
 
-The `align_csv` function takes a map parameter, you can specify a CSV separator, for instance `align_csv({ csv_separator = ';' })`. If you leave the map empty, decisive will attempt to guess the separator.
+The `align_csv` function takes a map parameter; here are the keys for the `align_csv` function map parameter:
+- `csv_separator`: string, character to use for this alignment. If not specified, `decisive` will attempt to guess it;
+- `auto_realign`: string list or false, whether to automatically re-align the columns after some events. Default: `{'InsertLeave', 'TextChanged'}`. Set to `false` to disable, or set other events; this is a buffer-local autocommand, not global;
+- `auto_realign_limit_ms`: `auto_realign` will not trigger if alignment takes more than 50ms or the duration you specify
 
 The `setup` function is totally optional, it enables the cell text object if you want it. You can change the text object leader (the default is `c`) through the `cell_text_object_leader` option.
 

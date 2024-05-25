@@ -1,10 +1,14 @@
-local function align_csv_clear()
+local function align_csv_clear(opts)
   local ns = vim.api.nvim_create_namespace('__align_csv')
   -- clear existing extmarks
   for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(0, ns, 0, -1, {})) do
     vim.api.nvim_buf_del_extmark(0, ns, mark[1])
   end
 
+  if (opts == nil or opts.keep_autocmd ~= true) and vim.b.__align_csv_autocmd ~= nil then
+    vim.api.nvim_del_autocmd(vim.b.__align_csv_autocmd)
+    vim.b.__align_csv_autocmd = nil
+  end
 end
 
 -- messy due to supporting " fields containing the separator
@@ -53,7 +57,9 @@ local function align_csv(opts)
     end
   end
 
-  align_csv_clear()
+  local start_align = vim.loop.hrtime()
+
+  align_csv_clear({keep_autocmd = true})
   local ns = vim.api.nvim_create_namespace('__align_csv')
   local col_lengths = {}
   for _, line in ipairs(lines) do
@@ -85,6 +91,19 @@ local function align_csv(opts)
         col_from_start = extmark_col
       end
     end
+  end
+
+  local elapsed = (vim.loop.hrtime() - start_align) / 1e6
+  if opts.print_speed and elapsed > 50 then
+    print("Formatted in " .. elapsed .. "ms.")
+  end
+  if vim.b.__align_csv_autocmd == nil and elapsed < (opts.auto_realign_limit_ms or 50) and opts.auto_realign ~= false then
+    vim.b.__align_csv_autocmd = vim.api.nvim_create_autocmd(opts.auto_realign or {"InsertLeave", "TextChanged"}, {
+      buffer = 0,
+      callback = function()
+        require("decisive").align_csv(opts)
+      end
+    })
   end
 end
 
