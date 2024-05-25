@@ -2,7 +2,7 @@
 
 Decisive.nvim is a neovim plugin to assist work with CSV files. It uses neovim 0.10+ 'inline extmarks' feature to insert virtual text to make the CSV columns line up.
 
-This means that you see the columns lined up, but you can edit the file, save it to disk, and the padding text is never written to disk. If you enter extra text, you'll have to re-trigger decisive to align the columns again.
+This means that you see the columns lined up, but you can edit the file, save it to disk, and the padding text is never written to disk. If you enter extra text, you may have to re-trigger decisive to align the columns again (see the `auto_realign` setting).
 
 Besides the function to line up columns, the plugin also provides:
 - functions to jump to the next and previous columns, which you could map to `[c` and `]c` for instance
