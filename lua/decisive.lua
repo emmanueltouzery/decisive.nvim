@@ -61,26 +61,30 @@ local function align_csv(opts)
 
   align_csv_clear({keep_autocmd = true})
   local ns = vim.api.nvim_create_namespace('__align_csv')
+  local col_max_lengths = {}
   local col_lengths = {}
-  for _, line in ipairs(lines) do
-    local cols = split_line(line, vim.b.__align_csv_separator)
-    for col_idx, col in ipairs(cols) do
-      local display_width = vim.fn.strdisplaywidth(col)
-      if not col_lengths[col_idx] or display_width+1 > col_lengths[col_idx] then
-        col_lengths[col_idx] = display_width+1
-      end
-    end
-  end
   for line_idx, line in ipairs(lines) do
     local cols = split_line(line, vim.b.__align_csv_separator)
-    local col_from_start = 0
+    col_lengths_line = {}
     for col_idx, col in ipairs(cols) do
-      if col_idx < #cols then
-        local extmark_col = col_from_start + #col+1
-        local display_width = vim.fn.strdisplaywidth(col)
-        if display_width < col_lengths[col_idx] then
+      local display_width = vim.fn.strdisplaywidth(col)
+      table.insert(col_lengths_line, {display_width, #col})
+      if not col_max_lengths[col_idx] or display_width+1 > col_max_lengths[col_idx] then
+        col_max_lengths[col_idx] = display_width+1
+      end
+    end
+    col_lengths[line_idx] = col_lengths_line
+  end
+  for line_idx, line_cols_info in ipairs(col_lengths) do
+    local col_from_start = 0
+    for col_idx, col_info in ipairs(line_cols_info) do
+      local col_display_width = col_info[1]
+      local col_length = col_info[2]
+      if col_idx < #line_cols_info then
+        local extmark_col = col_from_start + col_length+1
+        if col_display_width < col_max_lengths[col_idx] then
           vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
-            virt_text = {{string.rep(" ", col_lengths[col_idx] - display_width), "CsvFillHl"}},
+            virt_text = {{string.rep(" ", col_max_lengths[col_idx] - col_display_width), "CsvFillHl"}},
             virt_text_pos = "inline",
           })
         else
