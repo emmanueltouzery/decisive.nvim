@@ -65,8 +65,9 @@ local function align_csv(opts)
   for _, line in ipairs(lines) do
     local cols = split_line(line, vim.b.__align_csv_separator)
     for col_idx, col in ipairs(cols) do
-      if not col_lengths[col_idx] or vim.fn.strdisplaywidth(col)+1 > col_lengths[col_idx] then
-        col_lengths[col_idx] = vim.fn.strdisplaywidth(col)+1
+      local display_width = vim.fn.strdisplaywidth(col)
+      if not col_lengths[col_idx] or display_width+1 > col_lengths[col_idx] then
+        col_lengths[col_idx] = display_width+1
       end
     end
   end
@@ -76,9 +77,10 @@ local function align_csv(opts)
     for col_idx, col in ipairs(cols) do
       if col_idx < #cols then
         local extmark_col = col_from_start + #col+1
-        if vim.fn.strdisplaywidth(col) < col_lengths[col_idx] then
+        local display_width = vim.fn.strdisplaywidth(col)
+        if display_width < col_lengths[col_idx] then
           vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
-            virt_text = {{string.rep(" ", col_lengths[col_idx] - vim.fn.strdisplaywidth(col)), "CsvFillHl"}},
+            virt_text = {{string.rep(" ", col_lengths[col_idx] - display_width), "CsvFillHl"}},
             virt_text_pos = "inline",
           })
         else
