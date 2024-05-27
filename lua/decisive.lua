@@ -21,11 +21,11 @@ local function split_line(line, sep)
   for _, item in ipairs(list) do
     if col ~= nil then
       col = col .. sep .. item
-      if item:match([["$]]) then
+      if #item >= 1 and item:sub(#item) == '"' then
         table.insert(cols, col)
         col = nil
       end
-    elseif item:match([[^"]]) and not item:match([["$]]) then
+    elseif #item >= 1 and item:sub(1, 1) == '"' and not (item:sub(#item) == '"') then
       -- incomplete quoted column, store its beginning in variable
       col = item
     else
