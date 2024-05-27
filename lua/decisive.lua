@@ -25,7 +25,7 @@ local function split_line(line, sep)
         table.insert(cols, col)
         col = nil
       end
-    elseif #item >= 1 and item:sub(1, 1) == '"' and not (item:sub(#item) == '"') then
+    elseif #item >= 1 and item:sub(1, 1) == '"' and item:sub(#item) ~= '"' then
       -- incomplete quoted column, store its beginning in variable
       col = item
     else
