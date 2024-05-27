@@ -11,6 +11,8 @@ local function align_csv_clear(opts)
   end
 end
 
+-- TODO this returns offsets from the begining of the line everytime,
+-- while the rest of the code expects individual column widths
 local function split_line(line, sep)
   local separator_indices = {}
   local next_sep_idx = vim.fn.stridx(line, sep)
