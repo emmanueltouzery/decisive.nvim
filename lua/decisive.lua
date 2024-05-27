@@ -16,13 +16,13 @@ local function split_line(line, sep)
   local next_sep_idx = vim.fn.stridx(line, sep)
   while next_sep_idx ~= -1 do
     table.insert(separator_indices, {next_sep_idx, 0})
-    if #line > next_sep_idx and line[next_sep_idx+1] == '"' then
+    if #line > next_sep_idx and line:sub(next_sep_idx+2, next_sep_idx+2) == '"' then
       -- quoted field!
-      local end_quote_idx = vim.fn.stridx(line, '"')
-      if line:sub(end_quote_idx, 1) == sep then
+      local end_quote_idx = vim.fn.stridx(line, '"', next_sep_idx+2)
+      if line:sub(end_quote_idx+1, end_quote_idx+1) == '"' then
         -- finished the quoted field
         table.insert(separator_indices, {end_quote_idx+1, 0})
-        next_sep_idx = vim.fn.stridx(line, sep, end_quote_idx+1)
+        next_sep_idx = end_quote_idx+1
       else
         -- i don't like this quoted field. just act as if it wasn't quoted
         next_sep_idx = vim.fn.stridx(line, sep, next_sep_idx+1)
