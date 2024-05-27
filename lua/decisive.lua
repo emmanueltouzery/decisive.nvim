@@ -11,31 +11,37 @@ local function align_csv_clear(opts)
   end
 end
 
--- messy due to supporting " fields containing the separator
--- presumably not the most performant, if it's even correct
 local function split_line(line, sep)
-  local list = vim.split(line, sep)
-  -- now we merge back some cols that were quoted
-  local cols = {}
-  local col = nil
-  for _, item in ipairs(list) do
-    if col ~= nil then
-      col = col .. sep .. item
-      if #item >= 1 and item:sub(#item) == '"' then
-        table.insert(cols, col)
-        col = nil
+  local separator_indices = {}
+  local next_sep_idx = vim.fn.stridx(line, sep)
+  while next_sep_idx ~= -1 do
+    table.insert(separator_indices, {next_sep_idx, 0})
+    if #line > next_sep_idx and line[next_sep_idx+1] == '"' then
+      -- quoted field!
+      local end_quote_idx = vim.fn.stridx(line, '"')
+      if line:sub(end_quote_idx, 1) == sep then
+        -- finished the quoted field
+        table.insert(separator_indices, {end_quote_idx+1, 0})
+        next_sep_idx = vim.fn.stridx(line, sep, end_quote_idx+1)
+      else
+        -- i don't like this quoted field. just act as if it wasn't quoted
+        next_sep_idx = vim.fn.stridx(line, sep, next_sep_idx+1)
       end
-    elseif #item >= 1 and item:sub(1, 1) == '"' and item:sub(#item) ~= '"' then
-      -- incomplete quoted column, store its beginning in variable
-      col = item
     else
-      table.insert(cols, item)
+      next_sep_idx = vim.fn.stridx(line, sep, next_sep_idx+1)
     end
   end
-  if col ~= nil then
-    table.insert(cols, col)
+  -- i have the byte indices, now i want the display widths
+  local width = vim.fn.strdisplaywidth(line)
+  local cur_end = #line
+  for i=#separator_indices, 1, -1 do
+    local item = separator_indices[i]
+    width = width - vim.fn.strdisplaywidth(line:sub(item[1]+1, cur_end))
+    cur_end = item[1]
+    item[2] = width
   end
-  return cols
+
+  return separator_indices
 end
 
 local function align_csv(opts)
@@ -64,24 +70,21 @@ local function align_csv(opts)
   local col_max_lengths = {}
   local col_lengths = {}
   for line_idx, line in ipairs(lines) do
-    local cols = split_line(line, vim.b.__align_csv_separator)
-    col_lengths_line = {}
-    for col_idx, col in ipairs(cols) do
-      local display_width = vim.fn.strdisplaywidth(col)
-      table.insert(col_lengths_line, {display_width, #col})
+    local cols_info = split_line(line, vim.b.__align_csv_separator)
+    for col_idx, col_info in ipairs(cols_info) do
+      local display_width = col_info[2]
       if not col_max_lengths[col_idx] or display_width+1 > col_max_lengths[col_idx] then
         col_max_lengths[col_idx] = display_width+1
       end
     end
-    col_lengths[line_idx] = col_lengths_line
+    col_lengths[line_idx] = cols_info
   end
   for line_idx, line_cols_info in ipairs(col_lengths) do
-    local col_from_start = 0
     for col_idx, col_info in ipairs(line_cols_info) do
-      local col_display_width = col_info[1]
-      local col_length = col_info[2]
+      local col_display_width = col_info[2]
+      local col_length = col_info[1]
       if col_idx < #line_cols_info then
-        local extmark_col = col_from_start + col_length+1
+        local extmark_col = col_length+1
         if col_display_width < col_max_lengths[col_idx] then
           vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
             virt_text = {{string.rep(" ", col_max_lengths[col_idx] - col_display_width), "CsvFillHl"}},
@@ -94,7 +97,6 @@ local function align_csv(opts)
             virt_text_pos = "inline",
           })
         end
-        col_from_start = extmark_col
       end
     end
   end
