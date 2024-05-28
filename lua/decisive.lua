@@ -1,9 +1,7 @@
 local function align_csv_clear(opts)
   local ns = vim.api.nvim_create_namespace('__align_csv')
   -- clear existing extmarks
-  for _, mark in ipairs(vim.api.nvim_buf_get_extmarks(0, ns, 0, -1, {})) do
-    vim.api.nvim_buf_del_extmark(0, ns, mark[1])
-  end
+  vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
 
   if (opts == nil or opts.keep_autocmd ~= true) and vim.b.__align_csv_autocmd ~= nil then
     vim.api.nvim_del_autocmd(vim.b.__align_csv_autocmd)
