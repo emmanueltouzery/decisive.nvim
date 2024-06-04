@@ -32,5 +32,3 @@ The `align_csv` function takes a map parameter; here are the keys for the `align
 The `setup` function is totally optional, it enables the cell text object if you want it. You can change the text object leader (the default is `c`) through the `cell_text_object_leader` option.
 
 The highlight group that is used for the virtual inserted spaces is `CsvFillHl`. You could use it if you wanted the virtual spaces to have a specific color, for instance with `hi CsvFillHl ctermbg=red guibg=red`.
-
-Note that decisive is currently written very naively and will take a lot of CPU and memory to process larger CSV files.
