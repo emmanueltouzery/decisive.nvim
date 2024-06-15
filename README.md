@@ -32,3 +32,22 @@ The `align_csv` function takes a map parameter; here are the keys for the `align
 The `setup` function is totally optional, it enables the cell text object if you want it. You can change the text object leader (the default is `c`) through the `cell_text_object_leader` option.
 
 The highlight group that is used for the virtual inserted spaces is `CsvFillHl`. You could use it if you wanted the virtual spaces to have a specific color, for instance with `hi CsvFillHl ctermbg=red guibg=red`.
+
+## Plugin Setup
+### Lazy
+```lua
+return {
+  "emmanueltouzery/decisive.nvim",
+  config = function()
+    require('decisive').setup{}
+  end,
+  lazy=true,
+  ft = {'csv'},
+  keys = {
+    { '<leader>cca', ":lua require('decisive').align_csv({})<cr>",       { silent = true }, desc = "Align CSV",          mode = 'n' },
+    { '<leader>ccA', ":lua require('decisive').align_csv_clear({})<cr>", { silent = true }, desc = "Align CSV clear",    mode = 'n' },
+    { '[c', ":lua require('decisive').align_csv_prev_col()<cr>",         { silent = true }, desc = "Align CSV prev col", mode = 'n' },
+    { ']c', ":lua require('decisive').align_csv_next_col()<cr>",         { silent = true }, desc = "Align CSV next col", mode = 'n' },
+  }
+}
+```
