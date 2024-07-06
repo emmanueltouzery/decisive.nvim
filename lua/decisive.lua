@@ -1,3 +1,12 @@
+local function check_version()
+  if vim.version().major == 0 and vim.version().minor < 10 then
+    emsg = string.format("decisive.nvim requires nvim-0.10 to work, current version is %d.%d.%d", vim.version().major, vim.version().minor, vim.version().patch)
+    vim.notify(emsg, vim.log.levels.ERROR)
+    return false
+  end
+  return true
+end
+
 local function align_csv_clear(opts)
   local ns = vim.api.nvim_create_namespace('__align_csv')
   -- clear existing extmarks
@@ -37,6 +46,9 @@ local function split_line(line, sep)
 end
 
 local function align_csv(opts)
+  if not check_version() then
+    return
+  end
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   if #lines == 0 then
     return
@@ -83,13 +95,13 @@ local function align_csv(opts)
         if col_display_width < col_max_lengths[col_idx] then
           vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
             virt_text = {{string.rep(" ", col_max_lengths[col_idx] - col_display_width), "CsvFillHl"}},
-            virt_text_pos = "inline",
+            virt_text_pos = 'inline',
           })
         else
           -- no need for virtual text, the column is full. but add it anyway because of the previous/next column jumps
           vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
             virt_text = {{"", "CsvFillHl"}},
-            virt_text_pos = "inline",
+            virt_text_pos = 'inline',
           })
         end
         col_from_start = extmark_col
@@ -153,6 +165,9 @@ local function inner_cell_to()
 end
 
 local function setup(opts)
+  if not check_version() then
+    return
+  end
   if opts.enable_text_objects ~= false then
     local cell_key = opts.cell_text_object_leader or 'c'
     vim.cmd([[onoremap <silent> i]] .. cell_key .. [[ :<c-u>lua require('decisive').inner_cell_to()<cr>]])
