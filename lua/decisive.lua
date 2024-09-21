@@ -87,6 +87,10 @@ local function align_csv(opts)
   end
   for line_idx, line_cols_info in ipairs(col_lengths) do
     local col_from_start = 0
+    local row_hl_name = "CsvFillHlOdd"
+    if line_idx % 2 == 0 then
+      row_hl_name = "CsvFillHlEven"
+    end
     for col_idx, col_info in ipairs(line_cols_info) do
       local col_display_width = col_info[1]
       local col_length = col_info[2]
@@ -94,13 +98,13 @@ local function align_csv(opts)
         local extmark_col = col_from_start + col_length+1
         if col_display_width < col_max_lengths[col_idx] then
           vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
-            virt_text = {{string.rep(" ", col_max_lengths[col_idx] - col_display_width), "CsvFillHl"}},
+            virt_text = {{string.rep(" ", col_max_lengths[col_idx] - col_display_width), row_hl_name}},
             virt_text_pos = 'inline',
           })
         else
           -- no need for virtual text, the column is full. but add it anyway because of the previous/next column jumps
           vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
-            virt_text = {{"", "CsvFillHl"}},
+            virt_text = {{"", row_hl_name}},
             virt_text_pos = 'inline',
           })
         end
