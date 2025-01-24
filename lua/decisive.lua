@@ -85,7 +85,8 @@ local function align_csv(opts)
     local cols = split_line(line, vim.b.__align_csv_separator)
     col_lengths_line = {}
     for col_idx, col in ipairs(cols) do
-      local display_width = vim.fn.strdisplaywidth(col)
+      -- include the separator for display width, very important for tabs which have variable width
+      local display_width = vim.fn.strdisplaywidth(col .. vim.b.__align_csv_separator)
       table.insert(col_lengths_line, {display_width, #col})
       if not col_max_lengths[col_idx] or display_width+1 > col_max_lengths[col_idx] then
         col_max_lengths[col_idx] = display_width+1
