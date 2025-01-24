@@ -55,12 +55,20 @@ local function align_csv(opts)
   end
 
   known_separators = {',', ';', '\t'}
+  local line = 1
+  local test_line = lines[line]
+  -- tolerate a few blank lines at the top of the file (for instance
+  -- when pasting a CSV in a new buffer)
+  while #test_line == 0 and line <= #lines do
+    line = line + 1
+    test_line = lines[line]
+  end
   if vim.b.__align_csv_separator == nil then
     if opts.csv_separator ~= nil then
       vim.b.__align_csv_separator = opts.csv_separator
     else
       for _, sep in ipairs(known_separators) do
-        if #vim.split(lines[1], sep) >= 2 then
+        if #vim.split(test_line, sep) >= 2 then
           vim.b.__align_csv_separator = sep
         end
       end
