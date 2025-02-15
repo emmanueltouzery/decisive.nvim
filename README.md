@@ -54,3 +54,6 @@ return {
   }
 }
 ```
+
+## alternative plugins
+- <https://github.com/VidocqH/data-viewer.nvim> another implementation, i wasn't aware of its existence when i wrote decisive
