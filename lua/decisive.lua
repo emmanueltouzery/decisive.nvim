@@ -1,6 +1,6 @@
 local function check_version()
   if vim.version().major == 0 and vim.version().minor < 10 then
-    emsg = string.format("decisive.nvim requires nvim-0.10 to work, current version is %d.%d.%d", vim.version().major, vim.version().minor, vim.version().patch)
+    local emsg = string.format("decisive.nvim requires nvim-0.10 to work, current version is %d.%d.%d", vim.version().major, vim.version().minor, vim.version().patch)
     vim.notify(emsg, vim.log.levels.ERROR)
     return false
   end
@@ -9,12 +9,13 @@ end
 
 local function align_csv_clear(opts)
   local ns = vim.api.nvim_create_namespace('__align_csv')
+  local bufnr = opts.bufnr or 0
   -- clear existing extmarks
-  vim.api.nvim_buf_clear_namespace(0, ns, 0, -1)
+  vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 
-  if (opts == nil or opts.keep_autocmd ~= true) and vim.b.__align_csv_autocmd ~= nil then
-    vim.api.nvim_del_autocmd(vim.b.__align_csv_autocmd)
-    vim.b.__align_csv_autocmd = nil
+  if (opts == nil or opts.keep_autocmd ~= true) and vim.b[bufnr].__align_csv_autocmd ~= nil then
+    vim.api.nvim_del_autocmd(vim.b[bufnr].__align_csv_autocmd)
+    vim.b[bufnr].__align_csv_autocmd = nil
   end
 end
 
@@ -49,12 +50,13 @@ local function align_csv(opts)
   if not check_version() then
     return
   end
-  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local bufnr = opts.bufnr or 0
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
   if #lines == 0 then
     return
   end
 
-  known_separators = {',', ';', '\t'}
+  local known_separators = {',', ';', '\t'}
   local line = 1
   local test_line = lines[line]
   -- tolerate a few blank lines at the top of the file (for instance
@@ -63,13 +65,13 @@ local function align_csv(opts)
     line = line + 1
     test_line = lines[line]
   end
-  if vim.b.__align_csv_separator == nil then
+  if vim.b[bufnr].__align_csv_separator == nil then
     if opts.csv_separator ~= nil then
-      vim.b.__align_csv_separator = opts.csv_separator
+      vim.b[bufnr].__align_csv_separator = opts.csv_separator
     else
       for _, sep in ipairs(known_separators) do
         if #vim.split(test_line, sep) >= 2 then
-          vim.b.__align_csv_separator = sep
+          vim.b[bufnr].__align_csv_separator = sep
         end
       end
     end
@@ -77,16 +79,16 @@ local function align_csv(opts)
 
   local start_align = vim.loop.hrtime()
 
-  align_csv_clear({keep_autocmd = true})
+  align_csv_clear({keep_autocmd = true, bufnr = bufnr})
   local ns = vim.api.nvim_create_namespace('__align_csv')
   local col_max_lengths = {}
   local col_lengths = {}
   for line_idx, line in ipairs(lines) do
-    local cols = split_line(line, vim.b.__align_csv_separator)
-    col_lengths_line = {}
+    local cols = split_line(line, vim.b[bufnr].__align_csv_separator)
+    local col_lengths_line = {}
     for col_idx, col in ipairs(cols) do
       -- include the separator for display width, very important for tabs which have variable width
-      local display_width = vim.fn.strdisplaywidth(col .. vim.b.__align_csv_separator)
+      local display_width = vim.fn.strdisplaywidth(col .. vim.b[bufnr].__align_csv_separator)
       table.insert(col_lengths_line, {display_width, #col})
       if not col_max_lengths[col_idx] or display_width+1 > col_max_lengths[col_idx] then
         col_max_lengths[col_idx] = display_width+1
@@ -106,13 +108,13 @@ local function align_csv(opts)
       if col_idx < #line_cols_info then
         local extmark_col = col_from_start + col_length+1
         if col_display_width < col_max_lengths[col_idx] then
-          vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
+          vim.api.nvim_buf_set_extmark(bufnr, ns, line_idx-1, extmark_col, {
             virt_text = {{string.rep(" ", col_max_lengths[col_idx] - col_display_width), row_hl_name}},
             virt_text_pos = 'inline',
           })
         else
           -- no need for virtual text, the column is full. but add it anyway because of the previous/next column jumps
-          vim.api.nvim_buf_set_extmark(0, ns, line_idx-1, extmark_col, {
+          vim.api.nvim_buf_set_extmark(bufnr, ns, line_idx-1, extmark_col, {
             virt_text = {{"", row_hl_name}},
             virt_text_pos = 'inline',
           })
@@ -126,9 +128,9 @@ local function align_csv(opts)
   if opts.print_speed and elapsed > 50 then
     print("Formatted in " .. elapsed .. "ms.")
   end
-  if vim.b.__align_csv_autocmd == nil and elapsed < (opts.auto_realign_limit_ms or 50) and opts.auto_realign ~= false then
-    vim.b.__align_csv_autocmd = vim.api.nvim_create_autocmd(opts.auto_realign or {"InsertLeave", "TextChanged"}, {
-      buffer = 0,
+  if vim.b[bufnr].__align_csv_autocmd == nil and elapsed < (opts.auto_realign_limit_ms or 50) and opts.auto_realign ~= false then
+    vim.b[bufnr].__align_csv_autocmd = vim.api.nvim_create_autocmd(opts.auto_realign or {"InsertLeave", "TextChanged"}, {
+      buffer = bufnr,
       callback = function()
         require("decisive").align_csv(opts)
       end

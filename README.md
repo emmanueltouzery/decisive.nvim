@@ -31,6 +31,7 @@ The `align_csv` function takes a map parameter; here are the keys for the `align
 - `csv_separator`: string, character to use for this alignment. If not specified, `decisive` will attempt to guess it;
 - `auto_realign`: string list or false, whether to automatically re-align the columns after some events. Default: `{'InsertLeave', 'TextChanged'}`. Set to `false` to disable, or set other events; this is a buffer-local autocommand, not global;
 - `auto_realign_limit_ms`: `auto_realign` will not trigger if alignment takes more than 50ms or the duration you specify
+- `bufnr`: integer, buffer number to align.
 
 The `setup` function is totally optional, it enables the cell text object if you want it. You can change the text object leader (the default is `c`) through the `cell_text_object_leader` option.
 
