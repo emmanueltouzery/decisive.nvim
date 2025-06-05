@@ -57,4 +57,4 @@ return {
 ```
 
 ## alternative plugins
-- <https://github.com/hat0uma/csvview.nvim> another implementation, i wasn't aware of its existence when i wrote decisive
+- <https://github.com/hat0uma/csvview.nvim> another implementation, i wasn't aware of its existence when i wrote decisive. csvview is considerably more featureful, and decisive is considerably more lightweight.
