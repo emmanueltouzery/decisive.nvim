@@ -61,7 +61,7 @@ local function align_csv(opts)
   local test_line = lines[line]
   -- tolerate a few blank lines at the top of the file (for instance
   -- when pasting a CSV in a new buffer)
-  while #test_line == 0 and line <= #lines do
+  while #test_line == 0 and line < #lines do
     line = line + 1
     test_line = lines[line]
   end
