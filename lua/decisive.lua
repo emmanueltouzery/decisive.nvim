@@ -56,7 +56,7 @@ local function align_csv(opts)
     return
   end
 
-  local known_separators = {',', ';', '\t'}
+  local known_separators = {',', ';', '\t', '|'}
   local line = 1
   local test_line = lines[line]
   -- tolerate a few blank lines at the top of the file (for instance
@@ -75,6 +75,11 @@ local function align_csv(opts)
         end
       end
     end
+  end
+
+  if vim.b[bufnr].__align_csv_separator == nil then
+    vim.notify("Can't find separator for the CSV file", vim.log.levels.INFO)
+    return
   end
 
   local start_align = vim.loop.hrtime()
